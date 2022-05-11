@@ -11,6 +11,7 @@ parser.add_argument('e_output_file', metavar='e', type=str, nargs=1)
 
 base_path = Path('./')
 
+#todo: add some signatures
 
 def main():
 
@@ -50,23 +51,32 @@ def write_q_mle(file_content: str,q_output_file:Path) -> None:
 
 def write_e_mle(file_content: str,e_output_file:Path) -> None:
     events_list = parse_input_file(file_content)
-    events_count_string = _generate_events_counts_string(events_list)
-    words_signatures_events = _generate_word_signature_string()
+    counter = Counter(events_list)
+    counter = _add_unknown_words_to_counter(counter)
+    events_count_string = _generate_events_counts_string(counter)
+    words_signatures_events = _generate_word_signature_string(counter)
     with open(e_output_file,'w') as file:
         file.write(events_count_string + words_signatures_events)
 
 
-def _generate_events_counts_string(events_list: List[str]) -> str:
-    counter = Counter(events_list)
+def _generate_events_counts_string(counter: Counter) -> str:
     file_content = ''
     for event in counter.keys():
         file_content += event + '\t' + str(counter[event]) + '\n'
     file_content = file_content.replace('/', ' ')
     return file_content
 
-def _generate_word_signature_string() -> str:
+def _generate_word_signature_string(counter:Counter) -> str:
     return ''
 
+def _add_unknown_words_to_counter(counter:Counter)->Counter:
+    unknown_words_counter = Counter()
+    for event in counter:
+        if counter[event] == 1:
+            edited_event = re.sub(r'.*/','*UNK* ',event)
+            unknown_words_counter.update({edited_event:1})
+
+    return counter + unknown_words_counter
 if __name__ == '__main__':
     main()
 
