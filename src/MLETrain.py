@@ -34,16 +34,18 @@ def parse_input_file(file_content:str) -> List[str]:
     string_without_newlines = file_content.replace('\n',' ')
     events = string_without_newlines.split(' ')
     events.remove('')
+    events = map(lambda event: event[0].lower() + event[1:], events)
     return events
 
 def write_q_mle(file_content: str,q_output_file:Path) -> None:
     tags_list = re.findall('/[A-Z]+',file_content)
-    two_grams = zip(*[tags_list[i:] for i in range(2)])
-    counter = Counter(two_grams)
+    tri_grams = zip(*[tags_list[i:] for i in range(3)])
+    counter = Counter(tri_grams)
     file_content = ''
     for event in counter.keys():
         for item in event:
             file_content += str(item) + ' '
+        file_content = file_content[:-1] #trim last space
         file_content += '\t' + str(counter[event]) + '\n'
     file_content = file_content.replace('/','')
     with open(q_output_file,'w') as file:
