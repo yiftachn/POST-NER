@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from src.taggers.greedy_tagger import GreedyTagger
+from src.taggers.hmm_tagger import HMMTagger
 from src.utils import calculate_accuracy
 
 parser = argparse.ArgumentParser(description='Get args from bash')
@@ -19,7 +19,7 @@ def main() -> None:
     input_file_path = Path(args.input_file_name[0])
     prediction_file_path = Path(args.prediction_file[0])
 
-    tagger = GreedyTagger(input_file=input_file_path,prediction_file=prediction_file_path,q_file=args.q_file[0],e_file=args.e_file[0])
+    tagger = HMMTagger(input_file=input_file_path,prediction_file=prediction_file_path,q_file=args.q_file[0],e_file=args.e_file[0])
     tagger.write_prediction()
     print(f'Greedy tag Accuracy is {calculate_accuracy(prediction_file_path,"../data/ass1-tagger-dev")}')
 

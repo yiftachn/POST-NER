@@ -4,6 +4,8 @@ from typing import List
 import argparse
 import re
 
+from src.utils import START, UNKNOWN, extract_tags
+
 parser = argparse.ArgumentParser(description='Get args from bash')
 parser.add_argument('input_file_name', metavar='i', type=str, nargs=1)
 parser.add_argument('q_output_file', metavar='q', type=str, nargs=1)
@@ -11,8 +13,9 @@ parser.add_argument('e_output_file', metavar='e', type=str, nargs=1)
 
 base_path = Path('./')
 
-#todo: add some signatures
 
+#todo: add some signatures
+#todo: add two START marks in the beginnig of the sentence
 def main():
 
     args = parser.parse_args()
@@ -38,9 +41,13 @@ def parse_input_file(file_content:str) -> List[str]:
     return events
 
 def write_q_mle(file_content: str,q_output_file:Path) -> None:
-    tags_list = re.findall('/[A-Z]+',file_content)
-    tri_grams = zip(*[tags_list[i:] for i in range(3)])
-    counter = Counter(tri_grams)
+    file_content = _add_start_marks(file_content)
+    trigrams = []
+    counter = Counter()
+    for sentence in file_content.split('\n'):
+        tags_list = extract_tags(sentence,keep_start_mark=True)
+        trigrams_in_sentence = zip(*[tags_list[i:] for i in range(3)])
+        counter.update(trigrams_in_sentence)
     file_content = ''
     for event in counter.keys():
         for item in event:
@@ -50,6 +57,15 @@ def write_q_mle(file_content: str,q_output_file:Path) -> None:
     file_content = file_content.replace('/','')
     with open(q_output_file,'w') as file:
         file.write(file_content)
+
+
+def _add_start_marks(file_content:str) -> str:
+    sentences = file_content.split('\n')
+    sentences_with_start_marks = map(lambda row: START + ' ' + START + ' ' + row, sentences)
+    new_content = ''
+    for sentence in sentences_with_start_marks:
+        new_content += sentence +'\n'
+    return new_content
 
 def write_e_mle(file_content: str,e_output_file:Path) -> None:
     events_list = parse_input_file(file_content)
@@ -75,7 +91,7 @@ def _add_unknown_words_to_counter(counter:Counter)->Counter:
     unknown_words_counter = Counter()
     for event in counter:
         if counter[event] == 1:
-            edited_event = re.sub(r'.*/','*UNK* ',event)
+            edited_event = re.sub(r'.*/',f'{UNKNOWN} ',event)
             unknown_words_counter.update({edited_event:1})
 
     return counter + unknown_words_counter
